@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import express, { Express, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import userRoutes from './routes/userRoutes';
+import postRoutes from './routes/postRoutes'
 dotenv.config();
 
 const app: Express = express();
@@ -9,7 +10,7 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
-app.use('/api', userRoutes);
+app.use('/api', userRoutes, postRoutes);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Express + TypeScript Server');
