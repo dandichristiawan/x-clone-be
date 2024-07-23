@@ -5,6 +5,6 @@ import { authenticateJWT } from '../middlware';
 const router = express.Router();
 
 router.post('/createPost', authenticateJWT, createPost);
-router.get('/getPosts', authenticateJWT, getPost);
+router.get('/getPosts', getPost);
 
 export default router;

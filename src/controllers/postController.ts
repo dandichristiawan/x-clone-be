@@ -34,8 +34,13 @@ export async function getPost(
   res: Response
 ): Promise<void> {
   try {
-    const postCollection = db.collection('posts');
-    const posts = await postCollection.find().toArray();
+    const posts = await PostModel.find()
+      .populate({
+        path: 'user', 
+        select: 'username',
+      })
+      .exec();
+
     res.status(200).json(posts);
   } catch (error) {
     console.error('Failed to fetch', error);
