@@ -2,7 +2,7 @@ import { getModelForClass, prop } from "@typegoose/typegoose";
 
 class User {
     @prop({ required: true })
-    public name!: string
+    public username!: string
 
     @prop({ required: true, unique: true })
     public email!: string;

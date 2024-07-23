@@ -19,10 +19,12 @@ const client = new MongoClient(uri, {
   },
 });
 
+const db = client.db('x-clone');
+
 async function connectToMongoDB() {
   try {
     await client.connect();
-    await client.db('admin').command({ ping: 1 });
+    await db.command({ ping: 1 });
     console.log(
       'Pinged your deployment. You successfully connected to MongoDB!'
     );
@@ -32,7 +34,5 @@ async function connectToMongoDB() {
   }
 }
 connectToMongoDB().catch(console.dir);
-
-const db = client.db('x-clone');
 
 export { client, connectToMongoDB, db };
