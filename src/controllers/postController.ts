@@ -37,10 +37,10 @@ export async function createReplies(
   const { reply } = req.body;
 
   if (!reply || !postId) {
-    console.log(">masuk reply", reply)
-    console.log(">masuk post id", postId)
+    console.log('>masuk reply', reply);
+    console.log('>masuk post id', postId);
     res.status(400).json({ message: 'Reply and postId are required' });
-    return
+    return;
   }
 
   try {
@@ -48,14 +48,14 @@ export async function createReplies(
 
     if (!post) {
       res.status(404).json({ message: 'Post not found' });
-      return
+      return;
     }
 
     const newReply = new RepliesModel({
       user: req.user?.userId,
       reply,
       post: postId,
-    })
+    });
 
     await newReply.save();
 
@@ -63,11 +63,9 @@ export async function createReplies(
     await post.save();
 
     res.status(200).json({ message: 'Reply successfully created' });
-
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
-
 }
 
 export async function getPost(
@@ -80,6 +78,7 @@ export async function getPost(
         path: 'user',
         select: 'username',
       })
+      .sort({ createdAt: -1 })
       .exec();
 
     res.status(200).json(posts);
@@ -89,7 +88,10 @@ export async function getPost(
   }
 }
 
-export async function getSinglePost(req: Request, res: Response): Promise<void> {
+export async function getSinglePost(
+  req: Request,
+  res: Response
+): Promise<void> {
   const { postId } = req.params;
   try {
     const post = await PostModel.findById(postId)
@@ -105,7 +107,7 @@ export async function getSinglePost(req: Request, res: Response): Promise<void> 
         },
         select: 'reply',
       })
-      .exec()
+      .exec();
     res.status(200).json(post);
   } catch (error) {
     console.error('Failed to fetch', error);
