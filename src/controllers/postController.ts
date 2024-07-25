@@ -48,7 +48,6 @@ export async function createReplies(
 
     if (!post) {
       res.status(404).json({ message: 'Post not found' });
-      return;
     }
 
     const newReply = new RepliesModel({
@@ -59,8 +58,8 @@ export async function createReplies(
 
     await newReply.save();
 
-    post.replies.push(newReply);
-    await post.save();
+    post?.replies.push(newReply);
+    await post?.save();
 
     res.status(200).json({ message: 'Reply successfully created' });
   } catch (error: any) {

@@ -10,7 +10,6 @@ export async function signUpUser(req: Request, res: Response): Promise<void> {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
     res.status(400).json({ message: 'All fields are required' });
-    return;
   }
   try {
     const usersCollection = db.collection('users');
@@ -18,7 +17,6 @@ export async function signUpUser(req: Request, res: Response): Promise<void> {
 
     if (userExist) {
       res.status(400).json({ message: 'Email is already registered' });
-      return;
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -42,7 +40,6 @@ export async function Login(req: Request, res: Response): Promise<void> {
 
   if (!email || !password) {
     res.status(400).json({ message: 'Email and password are required!' });
-    return;
   }
 
   try {
@@ -50,19 +47,16 @@ export async function Login(req: Request, res: Response): Promise<void> {
 
     if (!user) {
       res.status(401).json({ message: 'Invalid email or password' });
-      return;
     }
 
     if (!user?.password) {
       res.status(500).json({ message: 'User password not found' });
-      return;
     }
 
     const isMatch = await bcrypt.compare(password, user?.password as string);
 
     if (!isMatch) {
       res.status(401).json({ message: 'Invalid email or password' });
-      return;
     }
 
     const token = jwt.sign({ userId: user?._id }, JWT_SECRET, {
