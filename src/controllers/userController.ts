@@ -7,20 +7,23 @@ import { Request, Response } from 'express';
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 export async function signUpUser(req: Request, res: Response): Promise<void> {
-  const { username, email, password } = req.body;
-  if (!username || !email || !password) {
+  const { fullname, username, email, password } = req.body;
+  if (!fullname || !username || !email || !password) {
     res.status(400).json({ message: 'All fields are required' });
   }
   try {
+
     const usersCollection = db.collection('users');
     const userExist = await usersCollection.findOne({ email });
 
     if (userExist) {
       res.status(400).json({ message: 'Email is already registered' });
     }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new UserModel({
+      fullname,
       username,
       email,
       password: hashedPassword,
@@ -69,6 +72,7 @@ export async function Login(req: Request, res: Response): Promise<void> {
       user: {
         id: user?._id,
         username: user?.username,
+        fullname: user?.fullname,
         email: user?.email,
       },
     });

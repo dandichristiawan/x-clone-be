@@ -75,7 +75,7 @@ export async function getPost(
     const posts = await PostModel.find()
       .populate({
         path: 'user',
-        select: 'username',
+        select: 'username fullname',
       })
       .sort({ createdAt: -1 })
       .exec();
@@ -96,15 +96,16 @@ export async function getSinglePost(
     const post = await PostModel.findById(postId)
       .populate({
         path: 'user',
-        select: 'username',
+        select: 'username fullname',
       })
       .populate({
         path: 'replies',
+        options: { sort: { createdAt: -1 } },
         populate: {
           path: 'user',
-          select: 'username',
+          select: 'username fullname',
         },
-        select: 'reply',
+        select: 'reply createdAt',
       })
       .exec();
     res.status(200).json(post);
