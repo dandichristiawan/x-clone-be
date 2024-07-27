@@ -28,8 +28,8 @@ export const authenticateJWT = (
       return;
     }
     req.user = user;
-    
-    console.log(req.user)
+
+    console.log('Authenticated user: ', req.user);
     next();
   });
 };

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../mongodb/mongodb';
-import { PostModel, RepliesModel } from '../models/Post';
+import { PostModel, RepliesModel, UserModel } from '../models';
 
 interface AuthenticatedRequest extends Request {
   user?: any;
@@ -23,6 +23,13 @@ export async function createPost(
     });
 
     await newPost.save();
+
+    const currentUser = await UserModel.findById(req.user.userId);
+    if (currentUser) {
+      currentUser.posts.push(newPost._id);
+      await currentUser.save();
+    }
+    
     res.status(200).json({ message: 'Post successfully created' });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -40,7 +47,6 @@ export async function createReplies(
     console.log('>masuk reply', reply);
     console.log('>masuk post id', postId);
     res.status(400).json({ message: 'Reply and postId are required' });
-    return;
   }
 
   try {
