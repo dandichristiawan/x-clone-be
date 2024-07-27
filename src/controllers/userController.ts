@@ -106,9 +106,12 @@ export async function getOneUser(req: Request, res: Response): Promise<void> {
   }
 
   try {
-    const user = await UserModel.findOne({ username: username }).select(
-      'username fullname posts following followers likes email createdAt'
-    );
+    const user = await UserModel.findOne({ username: username })
+    .select('username fullname posts following followers likes email createdAt')
+    .populate('posts')
+    .populate('following', 'username fullname')
+    .populate('followers')
+    .exec()
 
     if (!user) {
       res.status(404).json({ message: 'User not found' });
