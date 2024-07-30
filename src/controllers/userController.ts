@@ -98,7 +98,7 @@ export async function getAllUsers(req: Request, res: Response): Promise<void> {
   }
 }
 
-export async function getOneUser(req: Request, res: Response): Promise<void> {
+export async function getUserProfile(req: Request, res: Response): Promise<void> {
   const { username } = req.params;
 
   if (!username) {
@@ -107,12 +107,31 @@ export async function getOneUser(req: Request, res: Response): Promise<void> {
 
   try {
     const user = await UserModel.findOne({ username: username })
-    .select('username fullname posts following followers likes email createdAt')
-    .populate('posts')
-    .populate('following', 'username fullname')
-    .populate('followers')
-    .exec()
+      .select('username fullname posts following followers likes createdAt')
+      .populate('following', 'username')
+      .populate('followers')
+      .exec()
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch user' });
+  }
+}
 
+export async function getUserPost(req: Request, res: Response): Promise<void> {
+  const { username } = req.params;
+
+  if (!username) {
+    res.status(400).json({ message: 'Username are required' })
+  }
+
+  try {
+    const user = await UserModel.findOne({ username: username })
+      .select('posts')
+      .populate('posts')
+      .exec()
     if (!user) {
       res.status(404).json({ message: 'User not found' });
     }
@@ -121,6 +140,7 @@ export async function getOneUser(req: Request, res: Response): Promise<void> {
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch user' });
   }
+
 }
 
 export async function unfollowUser(
