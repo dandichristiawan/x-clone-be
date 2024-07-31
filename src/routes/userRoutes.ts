@@ -6,7 +6,8 @@ import {
   getUserProfile,
   followUser,
   unfollowUser,
-  getUserPost
+  getUserPost,
+  checkFollowStatus
 } from '../controllers/userController';
 import { authenticateJWT } from '../middlware';
 
@@ -19,5 +20,6 @@ router.get('/user/:username', getUserProfile);
 router.get('/userPost/:username', getUserPost)
 router.post('/followUser', authenticateJWT, followUser)
 router.post('/unfollowUser', authenticateJWT, unfollowUser)
+router.get('/check-follow-status', authenticateJWT, checkFollowStatus)
 
 export default router;

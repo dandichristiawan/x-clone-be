@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { UserModel } from '../models';
 import { db } from '../mongodb/mongodb';
 import { Request, Response } from 'express';
+import { Types } from 'mongoose';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
@@ -109,7 +110,7 @@ export async function getUserProfile(req: Request, res: Response): Promise<void>
     const user = await UserModel.findOne({ username: username })
       .select('username fullname posts following followers likes createdAt')
       .populate('following', 'username')
-      .populate('followers')
+      .populate('followers', 'username')
       .exec()
     if (!user) {
       res.status(404).json({ message: 'User not found' });
@@ -153,6 +154,10 @@ export async function unfollowUser(
     res.status(400).json({ message: 'User ID to unfollow is required' });
   }
 
+  // if (userIdToUnfollow === req.user.userId) {
+  //   res.status(400).json({ message: 'You cannot unfollow yourself' });
+  // }
+
   try {
     const currentUser = await UserModel.findById(req.user.userId);
     const userToUnfollow = await UserModel.findById(userIdToUnfollow);
@@ -190,8 +195,13 @@ export async function followUser(
 ): Promise<void> {
   const { userIdToFollow } = req.body;
   console.log('ini user id yg mau di follow: ', userIdToFollow);
+
   if (!userIdToFollow) {
     res.status(400).json({ message: 'User ID to follow is required' });
+  }
+
+  if (req.user?.userId === userIdToFollow) {
+    res.status(400).json({ message: 'You cannot follow yourself' });
   }
 
   try {
@@ -219,4 +229,34 @@ export async function followUser(
     console.error('Failed to follow user', error);
     res.status(500).json({ message: 'Failed to follow user' });
   }
+}
+
+export async function checkFollowStatus(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
+  const userIdToCheck = req.query.userIdToCheck as string
+
+  if (!userIdToCheck) {
+    res.status(400).json({ message: 'User ID to check follow status is required' });
+  }
+
+  try {
+    const currentUser = await UserModel.findById(req.user?.userId);
+
+    if (!currentUser) {
+      res.status(404).json({ message: 'User not found' });
+      return
+    }
+
+    const userIdToCheckObjectId = new Types.ObjectId(userIdToCheck)
+    const isFollowing = currentUser.following.includes(userIdToCheckObjectId)
+
+    res.status(200).json({ isFollowing })
+
+  } catch (error) {
+    console.error('Failed to check follow status', error);
+    res.status(500).json({ message: 'Failed to check follow status' });
+  }
+
 }
