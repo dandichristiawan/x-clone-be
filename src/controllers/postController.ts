@@ -29,8 +29,10 @@ export async function createPost(
       currentUser.posts.push(newPost._id);
       await currentUser.save();
     }
-    
-    res.status(200).json({ message: 'Post successfully created' });
+
+    res
+      .status(200)
+      .json({ message: 'Post successfully created', postId: newPost._id });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -104,17 +106,37 @@ export async function getSinglePost(
         path: 'user',
         select: 'username fullname',
       })
+      .exec();
+    res.status(200).json(post);
+  } catch (error) {
+    console.error('Failed to fetch', error);
+    res.status(500).json({ message: 'Failed to fetch posts' });
+  }
+}
+
+export async function getDetailPostReplies(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { postId } = req.params;
+  if (!postId) {
+    res.status(400).json({ message: 'Post id are required' });
+  }
+
+  try {
+    const reply = await PostModel.findById(postId)
+      .select('replies')
       .populate({
         path: 'replies',
         options: { sort: { createdAt: -1 } },
         populate: {
           path: 'user',
-          select: 'username fullname',
-        },
-        select: 'reply createdAt',
+          select: 'username fullname'
+        }
       })
       .exec();
-    res.status(200).json(post);
+
+    res.status(200).json(reply);
   } catch (error) {
     console.error('Failed to fetch', error);
     res.status(500).json({ message: 'Failed to fetch posts' });

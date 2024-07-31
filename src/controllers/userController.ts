@@ -99,7 +99,10 @@ export async function getAllUsers(req: Request, res: Response): Promise<void> {
   }
 }
 
-export async function getUserProfile(req: Request, res: Response): Promise<void> {
+export async function getUserProfile(
+  req: Request,
+  res: Response
+): Promise<void> {
   const { username } = req.params;
 
   if (!username) {
@@ -111,7 +114,7 @@ export async function getUserProfile(req: Request, res: Response): Promise<void>
       .select('username fullname posts following followers likes createdAt')
       .populate('following', 'username')
       .populate('followers', 'username')
-      .exec()
+      .exec();
     if (!user) {
       res.status(404).json({ message: 'User not found' });
     }
@@ -125,14 +128,17 @@ export async function getUserPost(req: Request, res: Response): Promise<void> {
   const { username } = req.params;
 
   if (!username) {
-    res.status(400).json({ message: 'Username are required' })
+    res.status(400).json({ message: 'Username are required' });
   }
 
   try {
     const user = await UserModel.findOne({ username: username })
       .select('posts')
-      .populate('posts')
-      .exec()
+      .populate({
+        path: 'posts',
+        options: { sort: { createdAt: -1 } },
+      })
+      .exec();
     if (!user) {
       res.status(404).json({ message: 'User not found' });
     }
@@ -141,7 +147,6 @@ export async function getUserPost(req: Request, res: Response): Promise<void> {
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch user' });
   }
-
 }
 
 export async function unfollowUser(
@@ -235,10 +240,12 @@ export async function checkFollowStatus(
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> {
-  const userIdToCheck = req.query.userIdToCheck as string
+  const userIdToCheck = req.query.userIdToCheck as string;
 
   if (!userIdToCheck) {
-    res.status(400).json({ message: 'User ID to check follow status is required' });
+    res
+      .status(400)
+      .json({ message: 'User ID to check follow status is required' });
   }
 
   try {
@@ -246,17 +253,15 @@ export async function checkFollowStatus(
 
     if (!currentUser) {
       res.status(404).json({ message: 'User not found' });
-      return
+      return;
     }
 
-    const userIdToCheckObjectId = new Types.ObjectId(userIdToCheck)
-    const isFollowing = currentUser.following.includes(userIdToCheckObjectId)
+    const userIdToCheckObjectId = new Types.ObjectId(userIdToCheck);
+    const isFollowing = currentUser.following.includes(userIdToCheckObjectId);
 
-    res.status(200).json({ isFollowing })
-
+    res.status(200).json({ isFollowing });
   } catch (error) {
     console.error('Failed to check follow status', error);
     res.status(500).json({ message: 'Failed to check follow status' });
   }
-
 }
