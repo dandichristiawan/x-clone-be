@@ -29,7 +29,7 @@ class User {
   public likes: Ref<Post>[] = [];
 }
 
-class Post {
+export class Post {
   @prop({ required: true, ref: () => User })
   public user!: Ref<User>;
 

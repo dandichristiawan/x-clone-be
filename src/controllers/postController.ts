@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { db } from '../mongodb/mongodb';
-import { PostModel, RepliesModel, UserModel } from '../models';
+import { PostModel, RepliesModel, UserModel, Post } from '../models';
+import { Ref } from '@typegoose/typegoose';
 
 interface AuthenticatedRequest extends Request {
   user?: any;
@@ -35,6 +36,83 @@ export async function createPost(
       .json({ message: 'Post successfully created', postId: newPost._id });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
+  }
+}
+
+export async function likePost(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
+  const { postId } = req.body;
+
+  if (!postId) {
+    res.status(400).json({ message: 'Post ID are required' });
+  }
+
+  try {
+    const userId = req.user?.userId;
+
+    const user = await UserModel.findById(userId);
+    const post = await PostModel.findById(postId);
+
+    if (!user || !post) {
+      res.status(404).json({ message: 'User or Post not found' });
+      return;
+    }
+
+    if (!user.likes.includes(postId as unknown as Ref<Post>)) {
+      user.likes.push(postId as unknown as Ref<Post>);
+      post.likes = (post?.likes || 0) + 1;
+
+      await user.save();
+      await post.save();
+
+      res.status(200).json({ message: 'Post liked successfully' });
+    } else {
+      res.status(400).json({ message: 'Post already liked' });
+    }
+  } catch (error) {
+    console.error('Failed to like post', error);
+    res.status(500).json({ message: 'Failed to like post' });
+  }
+}
+
+export async function unlikePost(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
+  const { postId } = req.body;
+
+  if (!postId) {
+    res.status(400).json({ message: 'Post ID are required' });
+  }
+
+  try {
+    const userId = req.user?.userId;
+
+    const user = await UserModel.findById(userId);
+    const post = await PostModel.findById(postId);
+
+    if (!user || !post) {
+      res.status(404).json({ message: 'User or Post not found' });
+      return;
+    }
+
+    const likeIndex = user.likes.indexOf(postId as unknown as Ref<Post>);
+    if (likeIndex > -1) {
+      user.likes.splice(likeIndex, 1);
+      post.likes = (post.likes || 0) - 1;
+
+      await user.save();
+      await post.save();
+
+      res.status(200).json({ message: 'Post unliked successfully' });
+    } else {
+      res.status(400).json({ message: 'Post not liked yet' });
+    }
+  } catch (error) {
+    console.error('Failed to unlike post', error);
+    res.status(500).json({ message: 'Failed to unlike post' });
   }
 }
 
@@ -114,6 +192,35 @@ export async function getSinglePost(
   }
 }
 
+export async function getLikedPost(req: Request, res: Response): Promise<void> {
+  const { username } = req.params;
+
+  if (!username) {
+    res.status(400).json({ message: 'Username are required' });
+  }
+
+  try {
+    const userLikes = await UserModel.findOne({ username: username })
+      .select('likes')
+      .populate({
+        path: 'likes',
+        populate: {
+          path: 'user',
+          select: 'username fullname',
+        },
+      })
+      .exec();
+
+    if (!userLikes) {
+      res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(userLikes);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch user' });
+  }
+}
+
 export async function getDetailPostReplies(
   req: Request,
   res: Response
@@ -131,8 +238,8 @@ export async function getDetailPostReplies(
         options: { sort: { createdAt: -1 } },
         populate: {
           path: 'user',
-          select: 'username fullname'
-        }
+          select: 'username fullname',
+        },
       })
       .exec();
 
