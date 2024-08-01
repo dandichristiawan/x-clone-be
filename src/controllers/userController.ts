@@ -78,6 +78,8 @@ export async function Login(req: Request, res: Response): Promise<void> {
         username: user?.username,
         fullname: user?.fullname,
         email: user?.email,
+        followers: user?.followers.length,
+        following: user?.following.length,
       },
     });
   } catch (error) {
@@ -118,7 +120,22 @@ export async function getUserProfile(
     if (!user) {
       res.status(404).json({ message: 'User not found' });
     }
-    res.status(200).json(user);
+
+    const posts = user?.posts.length;
+    const followers = user?.followers.length;
+    const following = user?.following.length;
+    const likes = user?.likes.length;
+    
+    res.status(200).json({
+      username: user?.username,
+      fullname: user?.fullname,
+      createdAt: user?.createdAt,
+      likes,
+      posts,
+      followers,
+      following,
+    });
+
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch user' });
   }
