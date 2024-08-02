@@ -125,8 +125,9 @@ export async function getUserProfile(
     const followers = user?.followers.length;
     const following = user?.following.length;
     const likes = user?.likes.length;
-    
+
     res.status(200).json({
+      userId: user?._id,
       username: user?.username,
       fullname: user?.fullname,
       createdAt: user?.createdAt,

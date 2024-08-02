@@ -39,52 +39,15 @@ export async function createPost(
   }
 }
 
-export async function likePost(
+export async function likeUnlikePost(
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> {
   const { postId } = req.body;
 
   if (!postId) {
-    res.status(400).json({ message: 'Post ID are required' });
-  }
-
-  try {
-    const userId = req.user?.userId;
-
-    const user = await UserModel.findById(userId);
-    const post = await PostModel.findById(postId);
-
-    if (!user || !post) {
-      res.status(404).json({ message: 'User or Post not found' });
-      return;
-    }
-
-    if (!user.likes.includes(postId as unknown as Ref<Post>)) {
-      user.likes.push(postId as unknown as Ref<Post>);
-      post.likes = (post?.likes || 0) + 1;
-
-      await user.save();
-      await post.save();
-
-      res.status(200).json({ message: 'Post liked successfully' });
-    } else {
-      res.status(400).json({ message: 'Post already liked' });
-    }
-  } catch (error) {
-    console.error('Failed to like post', error);
-    res.status(500).json({ message: 'Failed to like post' });
-  }
-}
-
-export async function unlikePost(
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> {
-  const { postId } = req.body;
-
-  if (!postId) {
-    res.status(400).json({ message: 'Post ID are required' });
+    res.status(400).json({ message: 'Post ID is required' });
+    return;
   }
 
   try {
@@ -100,6 +63,7 @@ export async function unlikePost(
 
     const likeIndex = user.likes.indexOf(postId as unknown as Ref<Post>);
     if (likeIndex > -1) {
+      // Unlike the post
       user.likes.splice(likeIndex, 1);
       post.likes = (post.likes || 0) - 1;
 
@@ -108,11 +72,18 @@ export async function unlikePost(
 
       res.status(200).json({ message: 'Post unliked successfully' });
     } else {
-      res.status(400).json({ message: 'Post not liked yet' });
+      // Like the post
+      user.likes.push(postId as unknown as Ref<Post>);
+      post.likes = (post.likes || 0) + 1;
+
+      await user.save();
+      await post.save();
+
+      res.status(200).json({ message: 'Post liked successfully' });
     }
   } catch (error) {
-    console.error('Failed to unlike post', error);
-    res.status(500).json({ message: 'Failed to unlike post' });
+    console.error('Failed to toggle like post', error);
+    res.status(500).json({ message: 'Failed to toggle like post' });
   }
 }
 

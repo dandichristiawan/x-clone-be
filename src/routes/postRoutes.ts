@@ -4,8 +4,7 @@ import {
   getSinglePost,
   createPost,
   createReplies,
-  likePost,
-  unlikePost,
+  likeUnlikePost,
   getLikedPost,
   getDetailPostReplies,
 } from '../controllers/postController';
@@ -15,11 +14,10 @@ const router = express.Router();
 
 router.get('/getPosts', getPost);
 router.get('/post/:postId', getSinglePost);
-router.post('/createPost', authenticateJWT, createPost);
-router.post('/post/:postId/reply', authenticateJWT, createReplies);
-router.get('/post/:postId/replies', getDetailPostReplies);
-router.post('/post/like', authenticateJWT, likePost);
-router.post('/post/unlike', authenticateJWT, unlikePost);
 router.get('/likes/:username', getLikedPost);
+router.post('/createPost', authenticateJWT, createPost);
+router.get('/post/:postId/replies', getDetailPostReplies);
+router.post('/post/like-events', authenticateJWT, likeUnlikePost);
+router.post('/post/:postId/reply', authenticateJWT, createReplies);
 
 export default router;
